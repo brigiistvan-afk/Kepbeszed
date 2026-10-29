@@ -68,15 +68,35 @@ h2{font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute
 button.sym:active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){button.sym:active{transform:none}}
 
-/* first–then board */
-.ft{display:grid;grid-template-columns:3fr 2fr;gap:12px}
+/* Előtte – Most – Utána tábla */
+.ft{display:grid;grid-template-columns:1fr 1.55fr 1fr;gap:10px;align-items:start}
 .ft .slot{display:flex;flex-direction:column;gap:8px;min-width:0}
-.ft .now .sym{padding:18px 8px;border-width:4px}
-.ft .now .sym .pic{font-size:84px;height:100px}
-.ft .now .sym .pic img{width:110px;height:110px}
-.ft .now .sym .lbl{font-size:24px}
-.ft .next .sym{opacity:.85;flex:1}
-.ft .next .sym .pic{font-size:56px;height:70px}
+.ft .sym{min-height:150px}
+.ft .now .sym{padding:16px 6px;border-width:4px;min-height:190px}
+.ft .now .sym .pic{height:auto}
+.ft .now .sym .pic img{width:100px;height:100px}
+.ft .now .sym .lbl{font-size:21px}
+.ft .side .sym .pic{height:auto}
+.ft .side .sym .pic img{width:58px;height:58px}
+.ft .side .sym .lbl{font-size:15px}
+.ft .prev .sym{opacity:.5;border-style:dashed}
+.ft .next .sym{opacity:.85}
+.ft .empty-slot{border:3px dashed var(--line);border-radius:var(--r);min-height:150px;display:grid;place-items:center;text-align:center;color:var(--muted);font-weight:700;padding:8px}
+.ft .tag{text-align:center}
+.ft .now .tag{color:var(--accent)}
+.board-actions{display:grid;grid-template-columns:1fr 1.55fr 1fr;gap:10px}
+.board-actions .btn.done{grid-column:2}
+.btn.undo{grid-column:1;padding:10px 6px;font-size:14px}
+.progress{font-weight:700;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.focus .ft{gap:12px}
+.focus .ft .sym{min-height:200px}
+.focus .ft .now .sym{min-height:260px}
+.focus .ft .now .sym .pic img{width:120px;height:120px}
+.focus .ft .now .sym .lbl{font-size:24px}
+.focus .ft .side .sym .pic img{width:72px;height:72px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--sunk);padding:4px;border-radius:12px}
+.seg button{border:0;border-radius:9px;padding:10px;background:transparent;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .tag{font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .btn{border:0;border-radius:12px;padding:14px 16px;font-weight:700;background:var(--sunk);color:var(--ink)}
 .btn.primary{background:var(--accent);color:var(--accent-ink)}
@@ -207,7 +227,7 @@ const CATS={
 const BASE=[["correct","Igen","social"],["mistake_no_wrong","Nem","social"],["give_to","Kérem","social"],["smile_to","Köszönöm","social"],["help_to","Segíts","social"],["time_out","Szünet kell","social"],["more","Még","social"],["enough","Elég","social"],["finish","Kész vagyok","social"],["confused_man","Nem tudom","social"],["want_to","Akarom","social"],["good","Jó","social"],["bad","Rossz","social"],["wait_to","Várj","social"],["come_to","Gyere ide","social"],["look_to","Nézd","social"],["hello","Szia","social"],["heart","Szeretlek","social"],["blow_kiss_to","Puszi","social"],["what","Mi ez?","social"],["where","Hol van?","social"],["when","Mikor?","social"],["who","Ki az?","social"],["why","Miért?","social"],["how_many","Mennyi?","social"],["how","Hogyan?","social"],["happy_man","Boldog vagyok","feel"],["sad_man","Szomorú vagyok","feel"],["angry_man","Mérges vagyok","feel"],["afraid_man","Félek","feel"],["yawn_to","Fáradt vagyok","feel"],["worried_man","Izgulok","feel"],["serene_man","Nyugodt vagyok","feel"],["surprised_man","Meglepődtem","feel"],["laughing_man","Nevetek","feel"],["winner","Büszke vagyok","feel"],["thermometer","Beteg vagyok","feel"],["hungry","Éhes vagyok","feel"],["thirsty","Szomjas vagyok","feel"],["ear_muffs","Túl hangos","feel"],["sunglasses","Túl erős a fény","feel"],["assembly","Túl sok ember","feel"],["sit_in_beanbag_to","Egyedül szeretnék lenni","feel"],["hug_to","Ölelést kérek","feel"],["pretty","Szép","desc"],["ugly","Csúnya","desc"],["large","Nagy","desc"],["little","Kicsi","desc"],["long","Hosszú","desc"],["short","Rövid","desc"],["hot","Forró","desc"],["yummy","Finom","desc"],["yucky","Nem finom","desc"],["spicy","Csípős","desc"],["noisy","Hangos","desc"],["quiet","Csendes","desc"],["soft","Puha","desc"],["hard","Kemény","desc"],["fast_2","Gyors","desc"],["full","Teli","desc"],["empty","Üres","desc"],["clean_hands","Tiszta","desc"],["dirty","Piszkos","desc"],["old_object","Régi","desc"],["broken","Elromlott","desc"],["heavy","Nehéz","desc"],["wet","Vizes","desc"],["dry","Száraz","desc"],["red","Piros","desc"],["blue","Kék","desc"],["green","Zöld","desc"],["yellow","Sárga","desc"],["pink","Rózsaszín","desc"],["purple","Lila","desc"],["brown","Barna","desc"],["black","Fekete","desc"],["white","Fehér","desc"],["headache","Fáj a fejem","body"],["stomach_ache","Fáj a hasam","body"],["toothache","Fáj a fogam","body"],["itch","Viszket","body"],["vomit_to","Hányingerem van","body"],["sneeze_cold","Náthás vagyok","body"],["plaster","Sebtapasz kell","body"],["medicine","Gyógyszer","body"],["need_toilet","WC-re kell mennem","body"],["head","Fej","body"],["eye","Szem","body"],["ear","Fül","body"],["nostril","Orr","body"],["mouth","Száj","body"],["tooth","Fog","body"],["long_hair","Haj","body"],["right_hand","Kéz","body"],["arm","Kar","body"],["stomach","Has","body"],["back","Hát","body"],["leg","Láb","body"],["knee","Térd","body"],["foot","Lábfej","body"],["water","Víz","food"],["orange_fizzy_drink","Üdítő","food"],["orange_juice","Gyümölcslé","food"],["milk","Tej","food"],["hot_chocolate","Kakaó","food"],["tea","Tea","food"],["bread","Kenyér","food"],["toast","Pirítós","food"],["croissant","Kifli","food"],["butter","Vaj","food"],["jam","Lekvár","food"],["honey","Méz","food"],["cheese","Sajt","food"],["ham","Felvágott","food"],["egg","Tojás","food"],["yogurt","Joghurt","food"],["muesli","Müzli","food"],["soup","Leves","food"],["pasta","Tészta","food"],["rice","Rizs","food"],["potato","Krumpli","food"],["chips","Sült krumpli","food"],["chicken_leg","Csirke","food"],["meat","Hús","food"],["fish_battered","Hal (étel)","food"],["sausages","Virsli","food"],["sandwich","Szendvics","food"],["hamburger","Hamburger","food"],["pizza","Pizza","food"],["pancakes","Palacsinta","food"],["salad","Saláta","food"],["sauce_tomato","Ketchup","food"],["fruit","Gyümölcs","food"],["vegetables","Zöldség","food"],["apple","Alma","food"],["banana","Banán","food"],["orange","Narancs","food"],["grapes","Szőlő","food"],["strawberry","Eper","food"],["pear","Körte","food"],["carrot","Répa","food"],["tomato","Paradicsom","food"],["cucumber","Uborka","food"],["sweetcorn","Kukorica","food"],["biscuits","Keksz","food"],["chocolate","Csoki","food"],["sweet","Cukorka","food"],["crisps","Chips","food"],["ice_cream","Fagyi","food"],["cake","Torta","food"],["shop","Bolt","shop"],["open_shop","Nyitva van","shop"],["closed_shop","Zárva van","shop"],["basket_2","Bevásárlás","shop"],["notepad","Bevásárlólista","shop"],["plastic_bag","Szatyor","shop"],["money","Pénz","shop"],["purse","Pénztárca","shop"],["bank_card","Kártyával fizetni","shop"],["chip_and_pin_device","Fizetés a pénztárnál","shop"],["queue_to","Sorban állni","shop"],["pick_to","Kiválasztom","shop"],["escalator","Mozgólépcső","shop"],["lift","Lift","shop"],["soap","Szappan","shop"],["toothpaste","Fogkrém","shop"],["shampoo","Sampon","shop"],["washing_powder","Mosópor","shop"],["toilet_roll","WC-papír","shop"],["nappy","Pelenka","shop"],["toys","Játékok","shop"],["present","Ajándék","shop"],["front_door","Haza akarok menni","shop"],["eat_to","Enni","act"],["drink_to","Inni","act"],["sleep_male_to","Aludni","act"],["relax_to","Pihenni","act"],["toilet","WC","act"],["wash_hands_to","Kezet mosni","act"],["bath","Fürdeni","act"],["shower","Zuhanyozni","act"],["brush_teeth_to","Fogat mosni","act"],["brush_hair_to","Hajat fésülni","act"],["get_dressed_to","Öltözni","act"],["undress_to","Vetkőzni","act"],["play_to","Játszani","act"],["jigsaw_puzzle","Kirakózni","act"],["build_to","Építeni","act"],["doll","Babázni","act"],["toy_car","Kisautózni","act"],["playing_cards","Kártyázni","act"],["bubbles_blow","Buborékot fújni","act"],["draw_to","Rajzolni","act"],["paint_to","Festeni","act"],["playdough","Gyurmázni","act"],["read_book_to","Mesét olvasni","act"],["childrens_tv","Mesét nézni","act"],["computer_game","Videójáték","act"],["touch_screen","Tabletezni","act"],["headphones","Zenét hallgatni","act"],["sing_to","Énekelni","act"],["dance_to","Táncolni","act"],["kick_ball_to","Labdázni","act"],["cycle_to","Biciklizni","act"],["swing","Hintázni","act"],["slide","Csúszdázni","act"],["trampoline_to","Trambulinozni","act"],["sand_pit","Homokozni","act"],["swim_to","Úszni","act"],["walk_to","Sétálni","act"],["walk_dog_to","Kutyát sétáltatni","act"],["run_to","Futni","act"],["jump_to","Ugrálni","act"],["go_outside_to","Kimenni","act"],["ride_car_to","Autózni","act"],["cook_to","Főzni","act"],["bake_to","Sütni","act"],["tidy_up_to","Rendet rakni","act"],["telephone_mobile_to","Telefonálni","act"],["take_picture_to","Fényképezni","act"],["house","Otthon","place"],["single_bed","Ágyam","place"],["cooker","Konyha","place"],["sink","Fürdőszoba","place"],["back_garden","Kert","place"],["school","Iskola","place"],["class_room","Óvoda","place"],["sensory_room","Fejlesztő terem","place"],["play_area","Játszótér","place"],["bench","Park","place"],["tree","Erdő","place"],["swimming_class","Uszoda","place"],["surgery_health_centre","Orvosi rendelő","place"],["haircut","Fodrász","place"],["grandparents","Nagyiék","place"],["cafe","Kávézó, étterem","place"],["church","Templom","place"],["book_shelf","Könyvtár","place"],["beach","Strand","place"],["theme_park","Vidámpark","place"],["stairs","Lépcső","place"],["car","Autó","place"],["bus","Busz","place"],["train","Vonat","place"],["family","Család","people"],["mum_parent","Anya","people"],["dad_parent","Apa","people"],["brother","Fiútestvér","people"],["sister","Lánytestvér","people"],["baby","Kistestvér","people"],["grandmother","Nagyi","people"],["grandfather","Nagypapa","people"],["teacher_1a","Tanító, óvónő","people"],["occupational_therapist_1a","Fejlesztő","people"],["speech_language_therapist_1a","Logopédus","people"],["doctor_1a","Orvos","people"],["nurse_1a","Ápoló","people"],["dentist_1a","Fogorvos","people"],["greengrocer_1a","Eladó","people"],["police_1a","Rendőr","people"],["dog","Kutya","people"],["cat","Macska","people"],["rabbit","Nyuszi","people"],["horse","Ló","people"],["bird","Madár","people"],["goldfish","Hal (állat)","people"],["t_shirt","Póló","clothes"],["jumper","Pulóver","clothes"],["trousers","Nadrág","clothes"],["jeans","Farmer","clothes"],["shorts","Rövidnadrág","clothes"],["skirt","Szoknya","clothes"],["dress","Ruha","clothes"],["tracksuit","Melegítő","clothes"],["coat","Kabát","clothes"],["raincoat","Esőkabát","clothes"],["bobble_hat","Sapka","clothes"],["scarf","Sál","clothes"],["gloves","Kesztyű","clothes"],["socks","Zokni","clothes"],["trainers","Cipő","clothes"],["wellington_boots","Csizma","clothes"],["sandals","Szandál","clothes"],["slippers","Papucs","clothes"],["pyjamas","Pizsama","clothes"],["swimming_costume","Fürdőruha","clothes"],["umbrella","Esernyő","clothes"],["glasses","Szemüveg","clothes"],["school_bag","Hátizsák","clothes"],["now","Most","time"],["next","Utána","time"],["before","Előtte","time"],["today","Ma","time"],["tomorrow","Holnap","time"],["yesterday","Tegnap","time"],["morning","Reggel","time"],["afternoon","Délután","time"],["night","Éjszaka","time"],["clock","Mennyi az idő?","time"],["timer_2","Időzítő","time"],["sun","Süt a nap","time"],["cloudy","Felhős","time"],["rain","Esik az eső","time"],["snow","Havazik","time"],["thunder_storm","Vihar van","time"],["rainbow","Szivárvány","time"],["spring","Tavasz","time"],["summer","Nyár","time"],["autumn","Ősz","time"],["winter","Tél","time"],["birthday_cake","Születésnap","time"],["Christmas_tree","Karácsony","time"],["Easter_egg","Húsvét","time"],["get_up_to","Felkelés","day"],["breakfast_1","Reggeli","day"],["lunch_1","Ebéd","day"],["packed_lunch","Uzsonna","day"],["dinner","Vacsora","day"],["bed_time","Lefekvés","day"],["work_book","Lecke","day"],["visitor_1a","Vendégek jönnek","day"],["travel","Utazás","day"],["party_celebration","Zsúr, buli","day"]].map(([id,label,cat])=>({id,label,cat,pg:1}));
 const DEFAULT_DAY=["get_up_to", "brush_teeth_to", "get_dressed_to", "breakfast_1", "school", "lunch_1", "play_to", "bath", "dinner", "bed_time"];
 
-function fresh(){return {custom:[],day:DEFAULT_DAY.map((s,i)=>({k:'d'+i,sym:s,done:false})),rate:0.9,cat:'social',sentence:[]}}
+function fresh(){return {custom:[],day:DEFAULT_DAY.map((s,i)=>({k:'d'+i,sym:s,done:false})),rate:0.9,cat:'social',sentence:[],focus:false}}
 let S=fresh();
 try{const raw=localStorage.getItem(KEY); if(raw){const p=JSON.parse(raw); S=Object.assign(fresh(),p);}}catch(e){}
 let Q='';
@@ -243,20 +263,29 @@ function renderDay(){
   const v=$('#view-napirend');
   const day=S.day.filter(d=>sym(d.sym));
   const idx=day.findIndex(d=>!d.done);
+  const doneN=day.filter(d=>d.done).length;
+  v.classList.toggle('focus',!!S.focus);
   let top='';
-  if(!day.length){top=`<div class="allDone"><div class="pic">🗓️</div><p>Még nincs napirend.</p><span class="hint">Szülői módban adhatsz hozzá lépéseket.</span></div>`}
-  else if(idx===-1){top=`<div class="allDone"><div class="pic" aria-hidden="true">🌟</div><p>Ügyes voltál! Minden kész.</p></div>`}
+  if(!day.length){top=`<div class="allDone"><p>Még nincs napirend.</p><span class="hint">Szülői módban adhatsz hozzá lépéseket.</span></div>`}
+  else if(idx===-1){top=`<div class="allDone"><p>Ügyes voltál! Minden kész.</p></div>
+    ${doneN?'<div class="board-actions"><button class="btn undo" id="undoBtn">↶ Vissza</button></div>':''}`}
   else{
-    const now=sym(day[idx].sym), nx=day[idx+1]?sym(day[idx+1].sym):null;
+    const now=sym(day[idx].sym), pv=idx>0?sym(day[idx-1].sym):null, nx=day[idx+1]?sym(day[idx+1].sym):null;
+    const sayAttr=s=>'data-say="'+esc(s.label)+'"';
     top=`<div class="ft">
-      <div class="slot now"><span class="tag">Most</span>${card(now,'data-say="'+esc(now.label)+'"')}
-        <button class="btn done" id="doneBtn">Kész ✓</button></div>
-      <div class="slot next"><span class="tag">Utána</span>${nx?card(nx,'data-say="'+esc(nx.label)+'"'):`<div class="sym" style="--cat:var(--line)"><span class="pic">🏁</span><span class="lbl">Vége a napnak</span></div>`}</div>
-    </div>`;
+      <div class="slot side prev"><span class="tag">Előtte</span>${pv?card(pv,sayAttr(pv)+' aria-label="Előtte: '+esc(pv.label)+', kész"'):'<div class="empty-slot">A nap eleje</div>'}</div>
+      <div class="slot now"><span class="tag">Most</span>${card(now,sayAttr(now)+' aria-label="Most: '+esc(now.label)+'"')}</div>
+      <div class="slot side next"><span class="tag">Utána</span>${nx?card(nx,sayAttr(nx)+' aria-label="Utána: '+esc(nx.label)+'"'):'<div class="empty-slot">Vége a napnak</div>'}</div>
+    </div>
+    <div class="board-actions">${idx>0?'<button class="btn undo" id="undoBtn">↶ Vissza</button>':''}<button class="btn done" id="doneBtn">Kész ✓</button></div>`;
+  }
+  if(S.focus){
+    v.innerHTML=top+(day.length?`<p class="progress">${doneN} / ${day.length} kész</p>`:'');
+    return;
   }
   const strip=day.map((d,i)=>{const s=sym(d.sym);return `<li class="${d.done?'is-done':''} ${i===idx?'is-now':''}"><span class="step-no">${i+1}.</span>${card(s,'data-say="'+esc(s.label)+'" aria-label="'+esc(s.label)+(d.done?', kész':'')+'"')}${d.done?'<span class="check" aria-hidden="true">✓</span>':''}</li>`}).join('');
   v.innerHTML=`${top}
-    ${day.length?`<h2>A mai nap · ${day.filter(d=>d.done).length} / ${day.length} kész</h2><ol class="strip">${strip}</ol>`:''}
+    ${day.length?`<h2>A mai nap · ${doneN} / ${day.length} kész</h2><ol class="strip">${strip}</ol>`:''}
     ${day.length?`<button class="btn" id="newDay">${resetArmed?'Biztos? Koppints újra az új naphoz':'Új nap kezdése'}</button>`:''}`;
 }
 $('#view-napirend').addEventListener('click',e=>{
@@ -267,6 +296,10 @@ $('#view-napirend').addEventListener('click',e=>{
     const nx=day[i+1]?sym(day[i+1].sym):null;
     speak(nx?'Kész! Most jön: '+nx.label:'Kész! Minden feladat elkészült. Ügyes voltál!');
     renderDay(); return;
+  }
+  if(e.target.closest('#undoBtn')){
+    const day=S.day.filter(d=>sym(d.sym)); let i=day.findIndex(d=>!d.done); i=(i<0?day.length:i)-1; if(i<0)return;
+    day[i].done=false; save(); speak('Vissza: '+sym(day[i].sym).label); renderDay(); return;
   }
   if(e.target.closest('#newDay')){
     if(!resetArmed){resetArmed=true;renderDay();setTimeout(()=>{resetArmed=false;if(view==='napirend')renderDay()},4000);return}
@@ -324,6 +357,14 @@ function renderParent(){
   const custom=S.custom.map(s=>`<li style="--cat:${CATS[s.cat].color}"><span class="pic">${pic(s)}</span><span class="name">${esc(s.label)} <small style="color:var(--muted);font-weight:400">· ${CATS[s.cat].name}</small></span><button class="icon" data-delc="${s.id}" aria-label="Kártya törlése">✕</button></li>`).join('');
   v.innerHTML=`
   <div class="panel">
+    <h3>Napirend nézet</h3>
+    <div class="seg" role="group" aria-label="Napirend nézet">
+      <button data-focus="0" aria-pressed="${!S.focus}">Egész nap</button>
+      <button data-focus="1" aria-pressed="${!!S.focus}">Csak 3 kártya</button>
+    </div>
+    <p class="hint">„Csak 3 kártya”: a gyermek csak az előző, az aktuális és a következő lépést látja. Kevesebb inger, könnyebb követni.</p>
+  </div>
+  <div class="panel">
     <h3>Napirend szerkesztése</h3>
     <p class="hint">A lépések sorrendje így jelenik meg a gyermeknek. Saját fotós kártyát is tehetsz bele.</p>
     <ul class="rows">${rows||'<li>Nincs még lépés.</li>'}</ul>
@@ -353,6 +394,10 @@ function renderParent(){
     <p class="hint">${voice?'Magyar hang elérhető ezen az eszközön.':'Ha nem hallasz magyar hangot, a telefon beállításaiban tölts le magyar felolvasó hangot.'}</p>
   </div>
   <div class="panel">
+    <h3>Új nap</h3>
+    <button class="btn" id="pNewDay">Napirend újrakezdése (minden lépés vissza)</button>
+  </div>
+  <div class="panel">
     <h3>Visszaállítás</h3>
     <button class="btn danger" id="wipe">${wipeArmed?'Biztos? Minden saját kártya és beállítás törlődik':'Alapállapot visszaállítása'}</button>
   </div>
@@ -366,6 +411,7 @@ $('#view-szulo').addEventListener('click',e=>{
   if(dn){const i=+dn.dataset.down;[S.day[i+1],S.day[i]]=[S.day[i],S.day[i+1]];save();renderParent();return}
   if(del){S.day.splice(+del.dataset.del,1);save();renderParent();return}
   if(dc){const id=dc.dataset.delc;S.custom=S.custom.filter(s=>s.id!==id);S.day=S.day.filter(d=>d.sym!==id);S.sentence=S.sentence.filter(x=>x!==id);save();renderParent();toast('Kártya törölve.');return}
+  const fb=t.closest('[data-focus]'); if(fb){S.focus=fb.dataset.focus==='1';save();renderParent();toast(S.focus?'Fókusz nézet: csak 3 kártya.':'Egész napos nézet.');return}
   if(t.closest('#addStepBtn')){const id=$('#addStep').value;S.day.push({k:'d'+Date.now(),sym:id,done:false});save();renderParent();toast('Lépés hozzáadva: '+sym(id).label);return}
   if(t.closest('#cSave')){
     const label=$('#cLabel').value.trim();
@@ -373,6 +419,7 @@ $('#view-szulo').addEventListener('click',e=>{
     if(!label){toast('Írd be a kártya feliratát.');$('#cLabel').focus();return}
     S.custom.push({id:'c'+Date.now(),label,img:pendingPhoto,cat:$('#cCat').value});
     pendingPhoto=null;save();renderParent();toast('Kártya elmentve: '+label);return}
+  if(t.closest('#pNewDay')){S.day.forEach(d=>d.done=false);save();toast('A napirend újrakezdve.');return}
   if(t.closest('#testVoice')){speak('Szia! Én vagyok a Képbeszéd.');return}
   if(t.closest('#wipe')){
     if(!wipeArmed){wipeArmed=true;renderParent();setTimeout(()=>{wipeArmed=false;if(view==='szulo')renderParent()},5000);return}
