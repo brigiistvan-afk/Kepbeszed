@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2C6782">
+<meta name="description" content="Képes napirend és képkártyás kommunikáció nehezen kommunikáló gyermekeknek és szüleiknek.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Képbeszéd">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Képbeszéd</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}
+body{margin:0;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+img{max-width:100%}
+/* Layout: one-screen app — header, scrolling view, bottom tab bar. Calm, low-stimulation surfaces; category colours follow the Fitzgerald key used in AAC boards. */
+:root{
+  --bg:#ECF1F2; --surface:#FFFFFF; --sunk:#E2E9EB; --ink:#17242A; --muted:#566870; --line:#CED9DC;
+  --accent:#2C6782; --accent-ink:#FFFFFF; --done:#3B8558; --danger:#B4413A;
+  --c-social:#E59BB9; --c-feel:#86AEE0; --c-food:#EEA764; --c-act:#83C487; --c-people:#EECB55; --c-day:#B3A1D8;
+  --c-desc:#6FC3C6; --c-body:#E7A49A; --c-shop:#D9B26E; --c-place:#A9BF6A; --c-clothes:#C99AD0; --c-time:#9BB4C9;
+  --font:'Atkinson Hyperlegible','Segoe UI',system-ui,-apple-system,sans-serif;
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F171B; --surface:#18242A; --sunk:#131D22; --ink:#E6EEF0; --muted:#98A9AF; --line:#2A3A41;
+  --accent:#7FB8D3; --accent-ink:#0C171C; --done:#6BBF8B; --danger:#E0786F;
+  --c-social:#C77897; --c-feel:#6B93C6; --c-food:#CF8A4B; --c-act:#67A86C; --c-people:#C9A93C; --c-day:#9583BD;
+  --c-desc:#4C9EA1; --c-body:#C07E74; --c-shop:#B08C4C; --c-place:#86994C; --c-clothes:#A275AA; --c-time:#7590A6;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F171B; --surface:#18242A; --sunk:#131D22; --ink:#E6EEF0; --muted:#98A9AF; --line:#2A3A41;
+  --accent:#7FB8D3; --accent-ink:#0C171C; --done:#6BBF8B; --danger:#E0786F;
+  --c-social:#C77897; --c-feel:#6B93C6; --c-food:#CF8A4B; --c-act:#67A86C; --c-people:#C9A93C; --c-day:#9583BD;
+  --c-desc:#4C9EA1; --c-body:#C07E74; --c-shop:#B08C4C; --c-place:#86994C; --c-clothes:#A275AA; --c-time:#7590A6;
+  color-scheme:dark}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.4}
+*{box-sizing:border-box}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr auto;max-width:760px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-block:12px 8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.brand{font-weight:700;font-size:20px;letter-spacing:.01em}
+.brand small{display:block;font-weight:400;font-size:13px;color:var(--muted)}
+.mode{font-size:13px;padding:4px 10px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.mode.on{background:var(--accent);color:var(--accent-ink)}
+main{overflow-y:auto;min-height:0;padding-block:4px 20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.view{display:flex;flex-direction:column;gap:16px}
+h2{font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0}
+
+/* symbol card */
+.sym{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  background:var(--surface);border:3px solid var(--cat,var(--line));border-radius:var(--r);
+  padding:10px 6px;text-align:center;min-width:0}
+.sym .pic{font-size:46px;line-height:1;height:56px;display:grid;place-items:center}
+.sym .pic img{width:64px;height:64px;object-fit:cover;border-radius:10px}
+.sym .lbl{font-weight:700;font-size:16px;overflow-wrap:anywhere}
+button.sym:active{transform:scale(.97)}
+@media (prefers-reduced-motion:reduce){button.sym:active{transform:none}}
+
+/* first–then board */
+.ft{display:grid;grid-template-columns:3fr 2fr;gap:12px}
+.ft .slot{display:flex;flex-direction:column;gap:8px;min-width:0}
+.ft .now .sym{padding:18px 8px;border-width:4px}
+.ft .now .sym .pic{font-size:84px;height:100px}
+.ft .now .sym .pic img{width:110px;height:110px}
+.ft .now .sym .lbl{font-size:24px}
+.ft .next .sym{opacity:.85;flex:1}
+.ft .next .sym .pic{font-size:56px;height:70px}
+.tag{font-size:14px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.btn{border:0;border-radius:12px;padding:14px 16px;font-weight:700;background:var(--sunk);color:var(--ink)}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.done{background:var(--done);color:#fff;font-size:20px;padding:16px}
+.btn.danger{background:transparent;color:var(--danger);border:2px solid var(--danger)}
+.btn.small{padding:8px 12px;font-size:15px}
+.allDone{background:var(--surface);border:3px solid var(--done);border-radius:var(--r);padding:24px 16px;text-align:center}
+.allDone .pic{font-size:72px}
+.allDone p{font-size:22px;font-weight:700;margin:8px 0 0}
+
+/* day strip */
+.strip{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.strip li{position:relative}
+.strip .sym{width:100%}
+.strip .sym .pic{font-size:36px;height:44px}
+.strip .sym .pic img{width:48px;height:48px}
+.strip .sym .lbl{font-size:14px}
+.strip li.is-done .sym{opacity:.45;border-style:dashed}
+.strip li.is-now .sym{box-shadow:0 0 0 3px var(--accent)}
+.check{position:absolute;top:-6px;right:-6px;width:26px;height:26px;border-radius:50%;background:var(--done);color:#fff;
+  display:grid;place-items:center;font-size:15px;font-weight:700}
+.step-no{position:absolute;top:6px;left:8px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* talk */
+.bar{display:flex;flex-direction:column;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px}
+.sentence{display:flex;flex-wrap:wrap;gap:8px;min-height:64px;align-items:center;padding:6px;border-radius:12px;background:var(--sunk)}
+.sentence .empty{color:var(--muted);padding-left:6px}
+.chip{display:flex;align-items:center;gap:6px;border:2px solid var(--cat,var(--line));background:var(--surface);border-radius:12px;padding:4px 10px 4px 6px;font-weight:700}
+.chip .pic{font-size:26px;line-height:1}
+.chip .pic img{width:30px;height:30px;object-fit:cover;border-radius:6px}
+.bar-actions{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+.yn img{width:34px;height:34px;object-fit:contain;background:#fff;border-radius:8px;padding:2px}
+.yn{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:20px;padding:14px 8px;border-radius:12px;border:3px solid var(--c-social);background:var(--surface);font-weight:700}
+.cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.cat{flex:0 0 auto;border:2px solid var(--cat,var(--line));background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:700;font-size:15px}
+.cat[aria-pressed="true"]{background:var(--cat);color:#111}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (min-width:560px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (min-width:720px){.grid{grid-template-columns:repeat(5,minmax(0,1fr))}}
+
+/* parent */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:12px}
+.panel h3{margin:0;font-size:18px}
+.panel p.hint{margin:0;color:var(--muted);font-size:15px}
+.rows{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.rows li{display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:10px;background:var(--sunk);border-left:5px solid var(--cat,var(--line))}
+.rows .pic{font-size:28px;width:36px;text-align:center;line-height:1}
+.rows .pic img{width:34px;height:34px;object-fit:cover;border-radius:6px}
+.rows .name{flex:1;min-width:0;font-weight:700;overflow-wrap:anywhere}
+.icon{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;font-size:18px}
+.icon:disabled{opacity:.35;cursor:default}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:14px;color:var(--muted);font-weight:700}
+.field input[type=text],.field select{padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
+.inline{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.inline .field{flex:1 1 180px;min-width:0}
+.pic img.pg{object-fit:contain;background:#fff;padding:3px}
+.preview{width:72px;height:72px;border-radius:12px;border:2px dashed var(--line);display:grid;place-items:center;overflow:hidden;color:var(--muted);font-size:13px;text-align:center}
+.preview img{width:100%;height:100%;object-fit:cover}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+#q{padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);width:100%}
+.note{font-size:13px;color:var(--muted);text-align:center;margin:8px 0 0}
+
+/* tab bar */
+nav{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);background:var(--surface);
+  padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+nav button{border:0;background:none;padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:700;font-size:14px;color:var(--muted);position:relative}
+nav button[aria-current="page"]{color:var(--accent)}
+nav svg{width:26px;height:26px}
+.hold{position:absolute;left:20%;right:20%;bottom:4px;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.hold i{display:block;height:100%;width:0;background:var(--accent)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));
+  background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:700;max-width:calc(100% - 32px);text-align:center;z-index:5}
+.flash{animation:fl .5s}
+@keyframes fl{0%{box-shadow:0 0 0 0 var(--accent)}100%{box-shadow:0 0 0 14px transparent}}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="brand">Képbeszéd<small id="dateLine"></small></div>
+    <span class="mode" id="modeBadge">Gyerek mód</span>
+  </header>
+
+  <main id="main">
+    <section class="view" id="view-napirend" aria-label="Napirend"></section>
+    <section class="view" id="view-beszel" aria-label="Beszélek" hidden></section>
+    <section class="view" id="view-szulo" aria-label="Szülői beállítások" hidden></section>
+  </main>
+
+  <nav aria-label="Fő menü">
+    <button id="tab-napirend" data-view="napirend" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M8 2v4M16 2v4M3 10h18M8 15l2 2 4-4"/></svg>
+      Napirend</button>
+    <button id="tab-beszel" data-view="beszel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8 11h.01M12 11h.01M16 11h.01"/></svg>
+      Beszélek</button>
+    <button id="tab-szulo" data-view="szulo" aria-describedby="holdHint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+      <span id="parentLabel">Szülő</span>
+      <span class="hold" aria-hidden="true"><i id="holdBar"></i></span>
+    </button>
+  </nav>
+</div>
+<span id="holdHint" hidden>Tartsd lenyomva két másodpercig a szülői mód megnyitásához.</span>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function(){
+const KEY='kepbeszed.v3';
+const CATS={
+  social:{name:'Gyors',color:'var(--c-social)'},
+  feel:{name:'Érzések',color:'var(--c-feel)'},
+  desc:{name:'Milyen?',color:'var(--c-desc)'},
+  body:{name:'Testem',color:'var(--c-body)'},
+  food:{name:'Étel, ital',color:'var(--c-food)'},
+  shop:{name:'Bevásárlás',color:'var(--c-shop)'},
+  act:{name:'Tevékenység',color:'var(--c-act)'},
+  place:{name:'Helyek',color:'var(--c-place)'},
+  people:{name:'Emberek, állatok',color:'var(--c-people)'},
+  clothes:{name:'Ruhák',color:'var(--c-clothes)'},
+  time:{name:'Idő, időjárás',color:'var(--c-time)'},
+  day:{name:'Napirend',color:'var(--c-day)'}
+};
+const BASE=[["correct","Igen","social"],["mistake_no_wrong","Nem","social"],["give_to","Kérem","social"],["smile_to","Köszönöm","social"],["help_to","Segíts","social"],["time_out","Szünet kell","social"],["more","Még","social"],["enough","Elég","social"],["finish","Kész vagyok","social"],["confused_man","Nem tudom","social"],["want_to","Akarom","social"],["good","Jó","social"],["bad","Rossz","social"],["wait_to","Várj","social"],["come_to","Gyere ide","social"],["look_to","Nézd","social"],["hello","Szia","social"],["heart","Szeretlek","social"],["blow_kiss_to","Puszi","social"],["what","Mi ez?","social"],["where","Hol van?","social"],["when","Mikor?","social"],["who","Ki az?","social"],["why","Miért?","social"],["how_many","Mennyi?","social"],["how","Hogyan?","social"],["happy_man","Boldog vagyok","feel"],["sad_man","Szomorú vagyok","feel"],["angry_man","Mérges vagyok","feel"],["afraid_man","Félek","feel"],["yawn_to","Fáradt vagyok","feel"],["worried_man","Izgulok","feel"],["serene_man","Nyugodt vagyok","feel"],["surprised_man","Meglepődtem","feel"],["laughing_man","Nevetek","feel"],["winner","Büszke vagyok","feel"],["thermometer","Beteg vagyok","feel"],["hungry","Éhes vagyok","feel"],["thirsty","Szomjas vagyok","feel"],["ear_muffs","Túl hangos","feel"],["sunglasses","Túl erős a fény","feel"],["assembly","Túl sok ember","feel"],["sit_in_beanbag_to","Egyedül szeretnék lenni","feel"],["hug_to","Ölelést kérek","feel"],["pretty","Szép","desc"],["ugly","Csúnya","desc"],["large","Nagy","desc"],["little","Kicsi","desc"],["long","Hosszú","desc"],["short","Rövid","desc"],["hot","Forró","desc"],["yummy","Finom","desc"],["yucky","Nem finom","desc"],["spicy","Csípős","desc"],["noisy","Hangos","desc"],["quiet","Csendes","desc"],["soft","Puha","desc"],["hard","Kemény","desc"],["fast_2","Gyors","desc"],["full","Teli","desc"],["empty","Üres","desc"],["clean_hands","Tiszta","desc"],["dirty","Piszkos","desc"],["old_object","Régi","desc"],["broken","Elromlott","desc"],["heavy","Nehéz","desc"],["wet","Vizes","desc"],["dry","Száraz","desc"],["red","Piros","desc"],["blue","Kék","desc"],["green","Zöld","desc"],["yellow","Sárga","desc"],["pink","Rózsaszín","desc"],["purple","Lila","desc"],["brown","Barna","desc"],["black","Fekete","desc"],["white","Fehér","desc"],["headache","Fáj a fejem","body"],["stomach_ache","Fáj a hasam","body"],["toothache","Fáj a fogam","body"],["itch","Viszket","body"],["vomit_to","Hányingerem van","body"],["sneeze_cold","Náthás vagyok","body"],["plaster","Sebtapasz kell","body"],["medicine","Gyógyszer","body"],["need_toilet","WC-re kell mennem","body"],["head","Fej","body"],["eye","Szem","body"],["ear","Fül","body"],["nostril","Orr","body"],["mouth","Száj","body"],["tooth","Fog","body"],["long_hair","Haj","body"],["right_hand","Kéz","body"],["arm","Kar","body"],["stomach","Has","body"],["back","Hát","body"],["leg","Láb","body"],["knee","Térd","body"],["foot","Lábfej","body"],["water","Víz","food"],["orange_fizzy_drink","Üdítő","food"],["orange_juice","Gyümölcslé","food"],["milk","Tej","food"],["hot_chocolate","Kakaó","food"],["tea","Tea","food"],["bread","Kenyér","food"],["toast","Pirítós","food"],["croissant","Kifli","food"],["butter","Vaj","food"],["jam","Lekvár","food"],["honey","Méz","food"],["cheese","Sajt","food"],["ham","Felvágott","food"],["egg","Tojás","food"],["yogurt","Joghurt","food"],["muesli","Müzli","food"],["soup","Leves","food"],["pasta","Tészta","food"],["rice","Rizs","food"],["potato","Krumpli","food"],["chips","Sült krumpli","food"],["chicken_leg","Csirke","food"],["meat","Hús","food"],["fish_battered","Hal (étel)","food"],["sausages","Virsli","food"],["sandwich","Szendvics","food"],["hamburger","Hamburger","food"],["pizza","Pizza","food"],["pancakes","Palacsinta","food"],["salad","Saláta","food"],["sauce_tomato","Ketchup","food"],["fruit","Gyümölcs","food"],["vegetables","Zöldség","food"],["apple","Alma","food"],["banana","Banán","food"],["orange","Narancs","food"],["grapes","Szőlő","food"],["strawberry","Eper","food"],["pear","Körte","food"],["carrot","Répa","food"],["tomato","Paradicsom","food"],["cucumber","Uborka","food"],["sweetcorn","Kukorica","food"],["biscuits","Keksz","food"],["chocolate","Csoki","food"],["sweet","Cukorka","food"],["crisps","Chips","food"],["ice_cream","Fagyi","food"],["cake","Torta","food"],["shop","Bolt","shop"],["open_shop","Nyitva van","shop"],["closed_shop","Zárva van","shop"],["basket_2","Bevásárlás","shop"],["notepad","Bevásárlólista","shop"],["plastic_bag","Szatyor","shop"],["money","Pénz","shop"],["purse","Pénztárca","shop"],["bank_card","Kártyával fizetni","shop"],["chip_and_pin_device","Fizetés a pénztárnál","shop"],["queue_to","Sorban állni","shop"],["pick_to","Kiválasztom","shop"],["escalator","Mozgólépcső","shop"],["lift","Lift","shop"],["soap","Szappan","shop"],["toothpaste","Fogkrém","shop"],["shampoo","Sampon","shop"],["washing_powder","Mosópor","shop"],["toilet_roll","WC-papír","shop"],["nappy","Pelenka","shop"],["toys","Játékok","shop"],["present","Ajándék","shop"],["front_door","Haza akarok menni","shop"],["eat_to","Enni","act"],["drink_to","Inni","act"],["sleep_male_to","Aludni","act"],["relax_to","Pihenni","act"],["toilet","WC","act"],["wash_hands_to","Kezet mosni","act"],["bath","Fürdeni","act"],["shower","Zuhanyozni","act"],["brush_teeth_to","Fogat mosni","act"],["brush_hair_to","Hajat fésülni","act"],["get_dressed_to","Öltözni","act"],["undress_to","Vetkőzni","act"],["play_to","Játszani","act"],["jigsaw_puzzle","Kirakózni","act"],["build_to","Építeni","act"],["doll","Babázni","act"],["toy_car","Kisautózni","act"],["playing_cards","Kártyázni","act"],["bubbles_blow","Buborékot fújni","act"],["draw_to","Rajzolni","act"],["paint_to","Festeni","act"],["playdough","Gyurmázni","act"],["read_book_to","Mesét olvasni","act"],["childrens_tv","Mesét nézni","act"],["computer_game","Videójáték","act"],["touch_screen","Tabletezni","act"],["headphones","Zenét hallgatni","act"],["sing_to","Énekelni","act"],["dance_to","Táncolni","act"],["kick_ball_to","Labdázni","act"],["cycle_to","Biciklizni","act"],["swing","Hintázni","act"],["slide","Csúszdázni","act"],["trampoline_to","Trambulinozni","act"],["sand_pit","Homokozni","act"],["swim_to","Úszni","act"],["walk_to","Sétálni","act"],["walk_dog_to","Kutyát sétáltatni","act"],["run_to","Futni","act"],["jump_to","Ugrálni","act"],["go_outside_to","Kimenni","act"],["ride_car_to","Autózni","act"],["cook_to","Főzni","act"],["bake_to","Sütni","act"],["tidy_up_to","Rendet rakni","act"],["telephone_mobile_to","Telefonálni","act"],["take_picture_to","Fényképezni","act"],["house","Otthon","place"],["single_bed","Ágyam","place"],["cooker","Konyha","place"],["sink","Fürdőszoba","place"],["back_garden","Kert","place"],["school","Iskola","place"],["class_room","Óvoda","place"],["sensory_room","Fejlesztő terem","place"],["play_area","Játszótér","place"],["bench","Park","place"],["tree","Erdő","place"],["swimming_class","Uszoda","place"],["surgery_health_centre","Orvosi rendelő","place"],["haircut","Fodrász","place"],["grandparents","Nagyiék","place"],["cafe","Kávézó, étterem","place"],["church","Templom","place"],["book_shelf","Könyvtár","place"],["beach","Strand","place"],["theme_park","Vidámpark","place"],["stairs","Lépcső","place"],["car","Autó","place"],["bus","Busz","place"],["train","Vonat","place"],["family","Család","people"],["mum_parent","Anya","people"],["dad_parent","Apa","people"],["brother","Fiútestvér","people"],["sister","Lánytestvér","people"],["baby","Kistestvér","people"],["grandmother","Nagyi","people"],["grandfather","Nagypapa","people"],["teacher_1a","Tanító, óvónő","people"],["occupational_therapist_1a","Fejlesztő","people"],["speech_language_therapist_1a","Logopédus","people"],["doctor_1a","Orvos","people"],["nurse_1a","Ápoló","people"],["dentist_1a","Fogorvos","people"],["greengrocer_1a","Eladó","people"],["police_1a","Rendőr","people"],["dog","Kutya","people"],["cat","Macska","people"],["rabbit","Nyuszi","people"],["horse","Ló","people"],["bird","Madár","people"],["goldfish","Hal (állat)","people"],["t_shirt","Póló","clothes"],["jumper","Pulóver","clothes"],["trousers","Nadrág","clothes"],["jeans","Farmer","clothes"],["shorts","Rövidnadrág","clothes"],["skirt","Szoknya","clothes"],["dress","Ruha","clothes"],["tracksuit","Melegítő","clothes"],["coat","Kabát","clothes"],["raincoat","Esőkabát","clothes"],["bobble_hat","Sapka","clothes"],["scarf","Sál","clothes"],["gloves","Kesztyű","clothes"],["socks","Zokni","clothes"],["trainers","Cipő","clothes"],["wellington_boots","Csizma","clothes"],["sandals","Szandál","clothes"],["slippers","Papucs","clothes"],["pyjamas","Pizsama","clothes"],["swimming_costume","Fürdőruha","clothes"],["umbrella","Esernyő","clothes"],["glasses","Szemüveg","clothes"],["school_bag","Hátizsák","clothes"],["now","Most","time"],["next","Utána","time"],["before","Előtte","time"],["today","Ma","time"],["tomorrow","Holnap","time"],["yesterday","Tegnap","time"],["morning","Reggel","time"],["afternoon","Délután","time"],["night","Éjszaka","time"],["clock","Mennyi az idő?","time"],["timer_2","Időzítő","time"],["sun","Süt a nap","time"],["cloudy","Felhős","time"],["rain","Esik az eső","time"],["snow","Havazik","time"],["thunder_storm","Vihar van","time"],["rainbow","Szivárvány","time"],["spring","Tavasz","time"],["summer","Nyár","time"],["autumn","Ősz","time"],["winter","Tél","time"],["birthday_cake","Születésnap","time"],["Christmas_tree","Karácsony","time"],["Easter_egg","Húsvét","time"],["get_up_to","Felkelés","day"],["breakfast_1","Reggeli","day"],["lunch_1","Ebéd","day"],["packed_lunch","Uzsonna","day"],["dinner","Vacsora","day"],["bed_time","Lefekvés","day"],["work_book","Lecke","day"],["visitor_1a","Vendégek jönnek","day"],["travel","Utazás","day"],["party_celebration","Zsúr, buli","day"]].map(([id,label,cat])=>({id,label,cat,pg:1}));
+const DEFAULT_DAY=["get_up_to", "brush_teeth_to", "get_dressed_to", "breakfast_1", "school", "lunch_1", "play_to", "bath", "dinner", "bed_time"];
+
+function fresh(){return {custom:[],day:DEFAULT_DAY.map((s,i)=>({k:'d'+i,sym:s,done:false})),rate:0.9,cat:'social',sentence:[]}}
+let S=fresh();
+try{const raw=localStorage.getItem(KEY); if(raw){const p=JSON.parse(raw); S=Object.assign(fresh(),p);}}catch(e){}
+let Q='';
+let parent=false, view='napirend', pendingPhoto=null, resetArmed=false, wipeArmed=false;
+
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Ezen az eszközön nem sikerült menteni.')}}
+function all(){return BASE.concat(S.custom)}
+function sym(id){return all().find(s=>s.id===id)}
+const $=s=>document.querySelector(s);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function pic(s){return s.img?`<img src="${s.img}" alt="">`:s.pg?`<img class="pg" src="p/${s.id}.svg" alt="" loading="lazy">`:`<span aria-hidden="true">${s.emoji||''}</span>`}
+function card(s,attrs=''){return `<button class="sym" style="--cat:${CATS[s.cat].color}" ${attrs}><span class="pic">${pic(s)}</span><span class="lbl">${esc(s.label)}</span></button>`}
+
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2600)}
+
+/* speech */
+let voice=null;
+function pickVoice(){try{const v=speechSynthesis.getVoices();voice=v.find(x=>/^hu/i.test(x.lang))||null}catch(e){}}
+try{pickVoice();speechSynthesis.onvoiceschanged=pickVoice}catch(e){}
+function speak(text,el){
+  if(el){el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}
+  try{const s=window.speechSynthesis;if(!s)return;s.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='hu-HU';u.rate=S.rate;if(voice)u.voice=voice;s.speak(u)}catch(e){}
+}
+
+/* date line */
+try{$('#dateLine').textContent=new Date().toLocaleDateString('hu-HU',{month:'long',day:'numeric',weekday:'long'})}catch(e){}
+
+/* ---------- Napirend ---------- */
+function renderDay(){
+  const v=$('#view-napirend');
+  const day=S.day.filter(d=>sym(d.sym));
+  const idx=day.findIndex(d=>!d.done);
+  let top='';
+  if(!day.length){top=`<div class="allDone"><div class="pic">🗓️</div><p>Még nincs napirend.</p><span class="hint">Szülői módban adhatsz hozzá lépéseket.</span></div>`}
+  else if(idx===-1){top=`<div class="allDone"><div class="pic" aria-hidden="true">🌟</div><p>Ügyes voltál! Minden kész.</p></div>`}
+  else{
+    const now=sym(day[idx].sym), nx=day[idx+1]?sym(day[idx+1].sym):null;
+    top=`<div class="ft">
+      <div class="slot now"><span class="tag">Most</span>${card(now,'data-say="'+esc(now.label)+'"')}
+        <button class="btn done" id="doneBtn">Kész ✓</button></div>
+      <div class="slot next"><span class="tag">Utána</span>${nx?card(nx,'data-say="'+esc(nx.label)+'"'):`<div class="sym" style="--cat:var(--line)"><span class="pic">🏁</span><span class="lbl">Vége a napnak</span></div>`}</div>
+    </div>`;
+  }
+  const strip=day.map((d,i)=>{const s=sym(d.sym);return `<li class="${d.done?'is-done':''} ${i===idx?'is-now':''}"><span class="step-no">${i+1}.</span>${card(s,'data-say="'+esc(s.label)+'" aria-label="'+esc(s.label)+(d.done?', kész':'')+'"')}${d.done?'<span class="check" aria-hidden="true">✓</span>':''}</li>`}).join('');
+  v.innerHTML=`${top}
+    ${day.length?`<h2>A mai nap · ${day.filter(d=>d.done).length} / ${day.length} kész</h2><ol class="strip">${strip}</ol>`:''}
+    ${day.length?`<button class="btn" id="newDay">${resetArmed?'Biztos? Koppints újra az új naphoz':'Új nap kezdése'}</button>`:''}`;
+}
+$('#view-napirend').addEventListener('click',e=>{
+  const say=e.target.closest('[data-say]'); if(say){speak(say.dataset.say,say);return}
+  if(e.target.closest('#doneBtn')){
+    const day=S.day.filter(d=>sym(d.sym)); const i=day.findIndex(d=>!d.done); if(i<0)return;
+    day[i].done=true; save();
+    const nx=day[i+1]?sym(day[i+1].sym):null;
+    speak(nx?'Kész! Most jön: '+nx.label:'Kész! Minden feladat elkészült. Ügyes voltál!');
+    renderDay(); return;
+  }
+  if(e.target.closest('#newDay')){
+    if(!resetArmed){resetArmed=true;renderDay();setTimeout(()=>{resetArmed=false;if(view==='napirend')renderDay()},4000);return}
+    resetArmed=false; S.day.forEach(d=>d.done=false); save(); renderDay(); toast('Kezdődhet az új nap!');
+  }
+});
+
+/* ---------- Beszélek ---------- */
+function renderTalk(){
+  const v=$('#view-beszel');
+  const sent=S.sentence.map(sym).filter(Boolean);
+  v.innerHTML=`
+  <div class="bar">
+    <div class="sentence" aria-live="polite" aria-label="Mondat">
+      ${sent.length?sent.map((s,i)=>`<button class="chip" style="--cat:${CATS[s.cat].color}" data-rm="${i}" aria-label="${esc(s.label)} törlése a mondatból"><span class="pic">${pic(s)}</span>${esc(s.label)}</button>`).join(''):'<span class="empty">Koppints a képekre, és itt összeáll a mondat.</span>'}
+    </div>
+    <div class="bar-actions">
+      <button class="yn" data-quick="Igen"><img class="pg" src="p/correct.svg" alt="">Igen</button>
+      <button class="yn" data-quick="Nem"><img class="pg" src="p/mistake_no_wrong.svg" alt="">Nem</button>
+      <button class="btn primary" id="sayAll" ${sent.length?'':'disabled'}>Mondd el</button>
+      <button class="btn" id="clearAll" ${sent.length?'':'disabled'}>Törlés</button>
+    </div>
+  </div>
+  <div class="field"><label for="q" class="sr">Keresés a kártyák között</label><input type="search" id="q" placeholder="Keresés, pl. alma, bolt, fáj…" value="${esc(Q)}" autocomplete="off"></div>
+  <div class="cats" role="group" aria-label="Kategóriák">
+    ${Object.entries(CATS).map(([k,c])=>`<button class="cat" style="--cat:${c.color}" data-cat="${k}" aria-pressed="${S.cat===k}">${c.name}</button>`).join('')}
+  </div>
+  <div class="grid" id="talkGrid"></div>`;
+  renderGrid();
+}
+function renderGrid(){
+  const q=Q.trim().toLowerCase();
+  const items=q?all().filter(s=>s.label.toLowerCase().includes(q)):all().filter(s=>s.cat===S.cat);
+  $('#talkGrid').innerHTML=items.map(s=>card(s,`data-add="${s.id}"`)).join('')||`<p class="hint">${q?'Nincs ilyen kártya. Szülői módban saját kártyát készíthetsz.':'Ebben a kategóriában még nincs kártya.'}</p>`;
+}
+$('#view-beszel').addEventListener('click',e=>{
+  const q=e.target.closest('[data-quick]'); if(q){speak(q.dataset.quick,q);return}
+  const c=e.target.closest('[data-cat]'); if(c){S.cat=c.dataset.cat;Q='';save();renderTalk();return}
+  const a=e.target.closest('[data-add]'); if(a){const s=sym(a.dataset.add);speak(s.label,a);if(S.sentence.length<8){S.sentence.push(s.id);save();renderTalk()}return}
+  const r=e.target.closest('[data-rm]'); if(r){S.sentence.splice(+r.dataset.rm,1);save();renderTalk();return}
+  if(e.target.closest('#sayAll')){speak(S.sentence.map(id=>sym(id)?.label).filter(Boolean).join(', '));return}
+  if(e.target.closest('#clearAll')){S.sentence=[];save();renderTalk()}
+});
+
+$('#view-beszel').addEventListener('input',e=>{if(e.target.id==='q'){Q=e.target.value;renderGrid();document.querySelectorAll('.cat').forEach(b=>b.setAttribute('aria-pressed',!Q&&b.dataset.cat===S.cat))}});
+
+/* ---------- Szülő ---------- */
+function optList(){return Object.entries(CATS).map(([k,c])=>`<optgroup label="${c.name}">${all().filter(s=>s.cat===k).map(s=>`<option value="${s.id}">${esc(s.label)}</option>`).join('')}</optgroup>`).join('')}
+function renderParent(){
+  const v=$('#view-szulo');
+  const rows=S.day.map((d,i)=>{const s=sym(d.sym);if(!s)return'';return `<li style="--cat:${CATS[s.cat].color}"><span class="pic">${pic(s)}</span><span class="name">${i+1}. ${esc(s.label)}</span>
+    <button class="icon" data-up="${i}" ${i===0?'disabled':''} aria-label="Feljebb">↑</button>
+    <button class="icon" data-down="${i}" ${i===S.day.length-1?'disabled':''} aria-label="Lejjebb">↓</button>
+    <button class="icon" data-del="${i}" aria-label="Törlés">✕</button></li>`}).join('');
+  const custom=S.custom.map(s=>`<li style="--cat:${CATS[s.cat].color}"><span class="pic">${pic(s)}</span><span class="name">${esc(s.label)} <small style="color:var(--muted);font-weight:400">· ${CATS[s.cat].name}</small></span><button class="icon" data-delc="${s.id}" aria-label="Kártya törlése">✕</button></li>`).join('');
+  v.innerHTML=`
+  <div class="panel">
+    <h3>Napirend szerkesztése</h3>
+    <p class="hint">A lépések sorrendje így jelenik meg a gyermeknek. Saját fotós kártyát is tehetsz bele.</p>
+    <ul class="rows">${rows||'<li>Nincs még lépés.</li>'}</ul>
+    <div class="inline">
+      <div class="field"><label for="addStep">Új lépés</label><select id="addStep">${optList()}</select></div>
+      <button class="btn primary" id="addStepBtn">Hozzáadás</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Saját kártya készítése</h3>
+    <p class="hint">Fotózd le a gyermek saját tárgyát, ételét, egy helyet vagy családtagot. A kártya a választott kategóriában és a napirendben is használható.</p>
+    <div class="inline">
+      <label class="preview" for="cPhoto" id="cPrev">${pendingPhoto?`<img src="${pendingPhoto}" alt="Kiválasztott kép">`:'Kép választása'}</label>
+      <input type="file" id="cPhoto" accept="image/*" hidden>
+      <div class="field"><label for="cLabel">Felirat (ezt mondja ki)</label><input type="text" id="cLabel" maxlength="30" placeholder="pl. Kék bögrém"></div>
+      <div class="field"><label for="cCat">Kategória</label><select id="cCat">${Object.entries(CATS).map(([k,c])=>`<option value="${k}">${c.name}</option>`).join('')}</select></div>
+      <button class="btn primary" id="cSave">Mentés</button>
+    </div>
+    ${custom?`<ul class="rows">${custom}</ul>`:''}
+  </div>
+  <div class="panel">
+    <h3>Felolvasás</h3>
+    <div class="inline">
+      <div class="field"><label for="rate">Beszéd tempója: <span id="rateVal">${S.rate.toFixed(1)}</span></label><input type="range" id="rate" min="0.6" max="1.3" step="0.1" value="${S.rate}"></div>
+      <button class="btn" id="testVoice">Próba</button>
+    </div>
+    <p class="hint">${voice?'Magyar hang elérhető ezen az eszközön.':'Ha nem hallasz magyar hangot, a telefon beállításaiban tölts le magyar felolvasó hangot.'}</p>
+  </div>
+  <div class="panel">
+    <h3>Visszaállítás</h3>
+    <button class="btn danger" id="wipe">${wipeArmed?'Biztos? Minden saját kártya és beállítás törlődik':'Alapállapot visszaállítása'}</button>
+  </div>
+  <button class="btn primary" id="exitParent">Vissza gyerek módba</button>
+  <p class="note">Alapverzió · az adatok csak ezen az eszközön tárolódnak<br>Piktogramok: <a href="https://mulberrysymbols.org" target="_blank" rel="noopener">Mulberry Symbols</a> © Steve Lee, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a></p>`;
+}
+$('#view-szulo').addEventListener('click',e=>{
+  const t=e.target;
+  const up=t.closest('[data-up]'), dn=t.closest('[data-down]'), del=t.closest('[data-del]'), dc=t.closest('[data-delc]');
+  if(up){const i=+up.dataset.up;[S.day[i-1],S.day[i]]=[S.day[i],S.day[i-1]];save();renderParent();return}
+  if(dn){const i=+dn.dataset.down;[S.day[i+1],S.day[i]]=[S.day[i],S.day[i+1]];save();renderParent();return}
+  if(del){S.day.splice(+del.dataset.del,1);save();renderParent();return}
+  if(dc){const id=dc.dataset.delc;S.custom=S.custom.filter(s=>s.id!==id);S.day=S.day.filter(d=>d.sym!==id);S.sentence=S.sentence.filter(x=>x!==id);save();renderParent();toast('Kártya törölve.');return}
+  if(t.closest('#addStepBtn')){const id=$('#addStep').value;S.day.push({k:'d'+Date.now(),sym:id,done:false});save();renderParent();toast('Lépés hozzáadva: '+sym(id).label);return}
+  if(t.closest('#cSave')){
+    const label=$('#cLabel').value.trim();
+    if(!pendingPhoto){toast('Válassz egy képet a kártyához.');return}
+    if(!label){toast('Írd be a kártya feliratát.');$('#cLabel').focus();return}
+    S.custom.push({id:'c'+Date.now(),label,img:pendingPhoto,cat:$('#cCat').value});
+    pendingPhoto=null;save();renderParent();toast('Kártya elmentve: '+label);return}
+  if(t.closest('#testVoice')){speak('Szia! Én vagyok a Képbeszéd.');return}
+  if(t.closest('#wipe')){
+    if(!wipeArmed){wipeArmed=true;renderParent();setTimeout(()=>{wipeArmed=false;if(view==='szulo')renderParent()},5000);return}
+    wipeArmed=false;S=fresh();save();renderParent();toast('Visszaállítva alapállapotba.');return}
+  if(t.closest('#exitParent')){setParent(false);show('napirend')}
+});
+$('#view-szulo').addEventListener('input',e=>{if(e.target.id==='rate'){S.rate=+e.target.value;$('#rateVal').textContent=S.rate.toFixed(1);save()}});
+$('#view-szulo').addEventListener('change',async e=>{
+  if(e.target.id!=='cPhoto'||!e.target.files[0])return;
+  try{pendingPhoto=await shrink(e.target.files[0]);const keepL=$('#cLabel').value,keepC=$('#cCat').value;renderParent();$('#cLabel').value=keepL;$('#cCat').value=keepC}
+  catch(err){toast('Ezt a képet nem sikerült betölteni. Próbálj másikat.')}
+});
+function shrink(file){return new Promise((res,rej)=>{const r=new FileReader();r.onerror=rej;r.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{
+  const side=Math.min(im.width,im.height),sx=(im.width-side)/2,sy=(im.height-side)/2,n=240;
+  const c=document.createElement('canvas');c.width=n;c.height=n;c.getContext('2d').drawImage(im,sx,sy,side,side,0,0,n,n);res(c.toDataURL('image/jpeg',0.82))};im.src=r.result};r.readAsDataURL(file)})}
+
+/* ---------- navigation & parent lock ---------- */
+function setParent(on){parent=on;const b=$('#modeBadge');b.textContent=on?'Szülői mód':'Gyerek mód';b.classList.toggle('on',on);$('#parentLabel').textContent=on?'Beállítás':'Szülő'}
+function show(name){
+  view=name;
+  ['napirend','beszel','szulo'].forEach(n=>{$('#view-'+n).hidden=n!==name;const tb=$('#tab-'+n);if(n===name)tb.setAttribute('aria-current','page');else tb.removeAttribute('aria-current')});
+  if(name==='napirend')renderDay(); if(name==='beszel')renderTalk(); if(name==='szulo')renderParent();
+  $('#main').scrollTop=0;
+}
+$('#tab-napirend').addEventListener('click',()=>show('napirend'));
+$('#tab-beszel').addEventListener('click',()=>show('beszel'));
+
+const HOLD=2000; let holdT=null,holdStart=0,raf=0;
+const pt=$('#tab-szulo'), bar=$('#holdBar');
+function holdBegin(e){
+  if(parent){show('szulo');return}
+  if(holdT)return; holdStart=performance.now();
+  const step=()=>{const p=Math.min(1,(performance.now()-holdStart)/HOLD);bar.style.width=(p*100)+'%';if(p<1)raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step);
+  holdT=setTimeout(()=>{holdEnd();setParent(true);show('szulo');toast('Szülői mód bekapcsolva.')},HOLD);
+}
+function holdEnd(){clearTimeout(holdT);holdT=null;cancelAnimationFrame(raf);bar.style.width='0'}
+pt.addEventListener('pointerdown',e=>{e.preventDefault();holdBegin(e)});
+['pointerup','pointerleave','pointercancel'].forEach(ev=>pt.addEventListener(ev,()=>{if(!parent||holdT)holdEnd()}));
+pt.addEventListener('click',e=>{if(!parent&&e.detail===0){/* keyboard */}else if(!parent){toast('Tartsd lenyomva a Szülő gombot két másodpercig.')}});
+pt.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!e.repeat){e.preventDefault();holdBegin(e)}});
+pt.addEventListener('keyup',e=>{if(e.key==='Enter'||e.key===' ')holdEnd()});
+pt.addEventListener('contextmenu',e=>e.preventDefault());
+
+show('napirend');
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  const hadController=!!navigator.serviceWorker.controller; let reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(hadController&&!reloaded){reloaded=true;location.reload()} });
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>{
+    document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') r.update().catch(()=>{}) });
+  }).catch(()=>{}));
+}
+</script>
+</body>
+</html>
